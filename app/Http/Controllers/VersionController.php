@@ -11,9 +11,14 @@ use RecursiveIteratorIterator;
 
 class VersionController extends Controller
 {
+    /**
+     * @throws Exception
+     */
     public function existeActualizacionDisponible(Request $request)
     {
         //Implementar logica para coneccion a S3
+        Log::debug("Request: " . json_encode($request, JSON_PRETTY_PRINT));
+        \Log::debug('Request Body:', ['body' => $request->getContent()]);
         $elemento = $request->input("nombre");
         $versionActualElemento = $request->input('version');
 
@@ -25,33 +30,25 @@ class VersionController extends Controller
             ]);
         }
 
-        if (isset($this->versionUpdates[$versionActualElemento])) { //TODO: CAMBIAR ESTO para que extraiga del properties la nueva version
-            $nuevaVersion = $this->versionUpdates[$versionActualElemento];
-            $cambios = $this->obtenerElementosAActualizar($versionActualElemento, $nuevaVersion);
+        $cambios = $this->obtenerElementosAActualizar($versionActualElemento, $ultimaVersionElemento, $elemento);
 
-            if ($cambios !== null) {
-                $archivoController = new ArchivoController();
-                return $archivoController->descargarArchivos($cambios);
-            }
-
-            return response()->json([
-                'actualizacionDisponible' => true,
-                'nuevaVersion' => $nuevaVersion,
-                'cambios' => $cambios
-            ]);
+        Log::debug("Cambios: " . json_encode($cambios, JSON_PRETTY_PRINT));
+        if ($cambios !== null) {
+            $archivoController = new ArchivoController();
+            return $archivoController->descargarArchivos($cambios, $elemento, $ultimaVersionElemento);
         }
 
-        return response()->json(['updateAvailable' => false]);
+        return response()->json(['actualizacionDisponible' => false]);
     }
 
-    private function obtenerElementosAActualizar($currentVersion, $nextVersion)
+    private function obtenerElementosAActualizar($currentVersion, $nextVersion, $elemento)
     {
         // Ruta a los archivos de hashes de versiones
-        $path = storage_path("app/versions");
+        $path = storage_path("app/$elemento");
 
         // Cargar archivos de hashes de las versiones
-        $archivoHashesVersionActual = "{$path}/{$currentVersion}.json";
-        $archivoHashesVersionNueva = "{$path}/{$nextVersion}.json";
+        $archivoHashesVersionActual = "{$path}/{$currentVersion}/{$currentVersion}.json";
+        $archivoHashesVersionNueva = "{$path}/{$nextVersion}/{$nextVersion}.json";
 
         try {
             if (!file_exists($archivoHashesVersionActual)) {
@@ -80,6 +77,7 @@ class VersionController extends Controller
                 // Archivo nuevo en la próxima versión
                 $cambios[] = [
                     "elemento" => $archivo,
+                    "rutaLocal" => "{$path}/{$nextVersion}/{$archivo}",
                     "hash" => $hash,
                     "accion" => "AGREGAR"
                 ];
@@ -87,6 +85,7 @@ class VersionController extends Controller
                 // Archivo modificado en la próxima versión
                 $cambios[] = [
                     "elemento" => $archivo,
+                    "rutaLocal" => "{$path}/{$nextVersion}/{$archivo}",
                     "hash" => $hash,
                     "accion" => "MODIFICAR"
                 ];

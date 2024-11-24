@@ -12,7 +12,7 @@ class ArchivoController extends Controller
         $archivos = [];
 
         foreach ($instrucciones as $instruccion) {
-            $archivos[] = $instruccion["elemento"]; //TODO: AGREGAR RUTA DE CARPETA
+            $archivos[] = $instruccion["rutaLocal"]; //TODO: AGREGAR RUTA DE CARPETA
         }
 
         $rutaArchivoInstrucciones = storage_path('app/temp/instrucciones.json');

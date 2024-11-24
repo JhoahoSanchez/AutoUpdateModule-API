@@ -15,8 +15,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/test-logs', function () {
-    Log::debug('Este es un mensaje de prueba');
-    return 'Log registrado!';
-});
-
+Route::get('/test', fn () => Log::debug('test'));
