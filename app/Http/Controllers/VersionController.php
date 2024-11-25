@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -16,55 +15,49 @@ class VersionController extends Controller
      */
     public function existeActualizacionDisponible(Request $request)
     {
-        //Implementar logica para coneccion a S3
-        Log::debug("Request: " . json_encode($request, JSON_PRETTY_PRINT));
-        \Log::debug('Request Body:', ['body' => $request->getContent()]);
         $elemento = $request->input("nombre");
         $versionActualElemento = $request->input('version');
 
         $ultimaVersionElemento = $this->obtenerUltimaVersion(storage_path("app") . DIRECTORY_SEPARATOR, $elemento);
 
         if ($versionActualElemento == $ultimaVersionElemento) {
-            return response()->json([
-                'actualizacionDisponible' => false
-            ]);
+            return response(null, 204);
         }
 
         $cambios = $this->obtenerElementosAActualizar($versionActualElemento, $ultimaVersionElemento, $elemento);
 
-        Log::debug("Cambios: " . json_encode($cambios, JSON_PRETTY_PRINT));
-        if ($cambios !== null) {
-            $archivoController = new ArchivoController();
-            return $archivoController->descargarArchivos($cambios, $elemento, $ultimaVersionElemento);
+        if ($cambios === null) {
+            return response(null, 503);
         }
 
-        return response()->json(['actualizacionDisponible' => false]);
+        Log::debug("Cambios: " . json_encode($cambios, JSON_PRETTY_PRINT));
+        $archivoController = new ArchivoController();
+        return $archivoController->descargarArchivos($cambios, $elemento, $ultimaVersionElemento);
     }
 
     private function obtenerElementosAActualizar($currentVersion, $nextVersion, $elemento)
     {
-        // Ruta a los archivos de hashes de versiones
-        $path = storage_path("app/$elemento");
+        $path = storage_path("app\\$elemento");
 
-        // Cargar archivos de hashes de las versiones
-        $archivoHashesVersionActual = "{$path}/{$currentVersion}/{$currentVersion}.json";
-        $archivoHashesVersionNueva = "{$path}/{$nextVersion}/{$nextVersion}.json";
+        $archivoHashesVersionActual = "{$path}\\{$currentVersion}\\{$currentVersion}.json";
+        $archivoHashesVersionNueva = "{$path}\\{$nextVersion}\\{$nextVersion}.json";
 
         try {
             if (!file_exists($archivoHashesVersionActual)) {
-                $hashes = $this->generarArchivoHashes("{$path}/{$currentVersion}");
+                $hashes = $this->generarArchivoHashes("{$path}\\{$currentVersion}");
                 file_put_contents($archivoHashesVersionActual, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionActual}");
             }
 
             if (!file_exists($archivoHashesVersionNueva)) {
-                $hashes = $this->generarArchivoHashes("{$path}/{$nextVersion}");
+                $hashes = $this->generarArchivoHashes("{$path}\\{$nextVersion}");
                 file_put_contents($archivoHashesVersionNueva, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionNueva}");
             }
 
         } catch (Exception $e) {
             Log::debug("Error al generar archivo hash: " . $e->getMessage());
+            return null;
         }
 
         $hashesVersionActual = json_decode(file_get_contents($archivoHashesVersionActual), true);
@@ -74,18 +67,18 @@ class VersionController extends Controller
 
         foreach ($hashesNuevaVersion as $archivo => $hash) {
             if (!isset($hashesVersionActual[$archivo])) {
-                // Archivo nuevo en la próxima versión
                 $cambios[] = [
-                    "elemento" => $archivo,
-                    "rutaLocal" => "{$path}/{$nextVersion}/{$archivo}",
+                    "elemento" => basename($archivo),
+                    "rutaInstalacion" => $archivo,
+                    "rutaAPI" => "{$path}\\{$nextVersion}\\{$archivo}",
                     "hash" => $hash,
                     "accion" => "AGREGAR"
                 ];
             } elseif ($hashesVersionActual[$archivo] !== $hash) {
-                // Archivo modificado en la próxima versión
                 $cambios[] = [
-                    "elemento" => $archivo,
-                    "rutaLocal" => "{$path}/{$nextVersion}/{$archivo}",
+                    "elemento" => basename($archivo),
+                    "rutaInstalacion" => $archivo,
+                    "rutaAPI" => "{$path}\\{$nextVersion}\\{$archivo}",
                     "hash" => $hash,
                     "accion" => "MODIFICAR"
                 ];
@@ -95,7 +88,8 @@ class VersionController extends Controller
         foreach ($hashesVersionActual as $archivo => $hash) {
             if (!isset($hashesNuevaVersion[$archivo])) {
                 $cambios[] = [
-                    "elemento" => $archivo,
+                    "elemento" => basename($archivo),
+                    "rutaInstalacion" => $archivo,
                     "hash" => $hash,
                     "accion" => "ELIMINAR"
                 ];
@@ -105,39 +99,25 @@ class VersionController extends Controller
         return $cambios;
     }
 
-    // Ruta para descargar archivos de actualización específicos
-    public function descargarActualizacion($version, $filename)
-    {
-        $filePath = "updates/{$version}/{$filename}"; // Suponiendo que los archivos están organizados por versión
-        if (Storage::exists($filePath)) {
-            return Storage::download($filePath);
-        } else {
-            return response()->json(['error' => 'File not found'], 404);
-        }
-    }
 
-
+    /**
+     * @throws Exception
+     */
     function generarArchivoHashes($directory, $hashAlgorithm = 'sha256')
     {
         $hashes = [];
 
-        // Verifica si el directorio existe
         if (!is_dir($directory)) {
             throw new Exception("El directorio especificado no existe: {$directory}");
         }
 
-        // Recorre los archivos y subcarpetas recursivamente
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
         foreach ($iterator as $file) {
-            // Ignorar directorios
             if ($file->isDir()) {
                 continue;
             }
 
-            // Obtener la ruta relativa del archivo
             $relativePath = str_replace($directory . DIRECTORY_SEPARATOR, '', $file->getPathname());
-
-            // Calcular el hash del archivo
             $hash = hash_file($hashAlgorithm, $file->getPathname());
             $hashes[$relativePath] = $hash;
         }
@@ -160,7 +140,7 @@ class VersionController extends Controller
         $subcarpetas = array_filter(glob($appPath . DIRECTORY_SEPARATOR . '*'), 'is_dir');
         $versiones = array_map('basename', $subcarpetas);
         $versionesValidas = array_filter($versiones, function ($version) {
-            return preg_match('/^\d+(\.\d+)*$/', $version);
+            return preg_match('/\d+(\.\d+)*$/', $version);
         });
 
         usort($versionesValidas, function ($a, $b) {
