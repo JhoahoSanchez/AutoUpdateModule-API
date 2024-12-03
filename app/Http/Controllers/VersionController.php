@@ -21,36 +21,32 @@ class VersionController extends Controller
         $ultimaVersionElemento = $this->obtenerUltimaVersion(storage_path("app") . DIRECTORY_SEPARATOR, $elemento);
 
         if ($versionActualElemento == $ultimaVersionElemento) {
-            return response(null, 204);
+            return response()->json(["mensaje" => "No existen nuevas versiones disponibles", "actualizable" => false], 204);
         }
 
-        $cambios = $this->obtenerElementosAActualizar($versionActualElemento, $ultimaVersionElemento, $elemento);
-
-        if ($cambios === null) {
-            return response(null, 503);
-        }
-
-        Log::debug("Cambios: " . json_encode($cambios, JSON_PRETTY_PRINT));
-        $archivoController = new ArchivoController();
-        return $archivoController->descargarArchivos($cambios, $elemento, $ultimaVersionElemento);
+        return response()->json(["mensaje" => "Existe una nueva version", "actualizable" => true, "version" => $ultimaVersionElemento]);
     }
 
-    private function obtenerElementosAActualizar($currentVersion, $nextVersion, $elemento)
+    private function obtenerInstrucciones(Request $request) //$currentVersion, $nextVersion, $elemento
     {
+        $elemento = $request->input("nombre");
+        $versionActualElemento = $request->input('versionActual');
+        $versionActualizable = $request->input("versionActualizable");
+
         $path = storage_path("app\\$elemento");
 
-        $archivoHashesVersionActual = "{$path}\\{$currentVersion}\\{$currentVersion}.json";
-        $archivoHashesVersionNueva = "{$path}\\{$nextVersion}\\{$nextVersion}.json";
+        $archivoHashesVersionActual = "{$path}\\{$versionActualElemento}\\{$versionActualElemento}.json";
+        $archivoHashesVersionNueva = "{$path}\\{$versionActualizable}\\{$versionActualizable}.json";
 
         try {
             if (!file_exists($archivoHashesVersionActual)) {
-                $hashes = $this->generarArchivoHashes("{$path}\\{$currentVersion}");
+                $hashes = $this->generarArchivoHashes("{$path}\\{$versionActualElemento}");
                 file_put_contents($archivoHashesVersionActual, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionActual}");
             }
 
             if (!file_exists($archivoHashesVersionNueva)) {
-                $hashes = $this->generarArchivoHashes("{$path}\\{$nextVersion}");
+                $hashes = $this->generarArchivoHashes("{$path}\\{$versionActualizable}");
                 file_put_contents($archivoHashesVersionNueva, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionNueva}");
             }
@@ -70,7 +66,7 @@ class VersionController extends Controller
                 $cambios[] = [
                     "elemento" => basename($archivo),
                     "rutaInstalacion" => $archivo,
-                    "rutaAPI" => "{$path}\\{$nextVersion}\\{$archivo}",
+                    "rutaAPI" => "{$path}\\{$versionActualizable}\\{$archivo}",
                     "hash" => $hash,
                     "accion" => "AGREGAR"
                 ];
@@ -78,7 +74,7 @@ class VersionController extends Controller
                 $cambios[] = [
                     "elemento" => basename($archivo),
                     "rutaInstalacion" => $archivo,
-                    "rutaAPI" => "{$path}\\{$nextVersion}\\{$archivo}",
+                    "rutaAPI" => "{$path}\\{$versionActualizable}\\{$archivo}",
                     "hash" => $hash,
                     "accion" => "MODIFICAR"
                 ];
@@ -96,14 +92,13 @@ class VersionController extends Controller
             }
         }
 
-        return $cambios;
+        return response()->json($cambios);
     }
-
 
     /**
      * @throws Exception
      */
-    function generarArchivoHashes($directory, $hashAlgorithm = 'sha256')
+    private function generarArchivoHashes($directory, $hashAlgorithm = 'sha256')
     {
         $hashes = [];
 
@@ -129,7 +124,7 @@ class VersionController extends Controller
     /**
      * @throws Exception
      */
-    function obtenerUltimaVersion($basePath, $nombreAplicacion)
+    private function obtenerUltimaVersion($basePath, $nombreAplicacion)
     {
         $appPath = rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombreAplicacion;
 

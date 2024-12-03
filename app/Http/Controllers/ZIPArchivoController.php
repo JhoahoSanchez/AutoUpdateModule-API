@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use ZipArchive;
 
-class ArchivoController extends Controller
+class ZIPArchivoController extends Controller
 {
-    public function descargarArchivos($instrucciones, $elemento, $ultimaVersionElemento)
+    public function descargarArchivos(Request $request) //$instrucciones, $elemento, $ultimaVersionElemento
     {
+        $instrucciones = $request->input('instrucciones');
+        $elemento  = $request->input('elemento');
+        $ultimaVersion  = $request->input('ultimaVersion');
+
         $archivos = [];
 
         foreach ($instrucciones as $instruccion) {
@@ -17,17 +22,17 @@ class ArchivoController extends Controller
             ];
         }
 
-        $rutaArchivoInstrucciones = storage_path('app\\temp\\instrucciones.json');
-        file_put_contents($rutaArchivoInstrucciones, json_encode($instrucciones, JSON_PRETTY_PRINT));
+        //$rutaArchivoInstrucciones = storage_path('app\\temp\\instrucciones.json');
+        //file_put_contents($rutaArchivoInstrucciones, json_encode($instrucciones, JSON_PRETTY_PRINT));
 
-        $zipFileName = "{$elemento}-{$ultimaVersionElemento}.zip";
+        $zipFileName = "{$elemento}-{$ultimaVersion}.zip";
         $zip = new ZipArchive;
         $zipPath = storage_path("app\\temp\\{$zipFileName}");
 
-        $archivos[] = [
-            'rutaReal' => $rutaArchivoInstrucciones,
-            'rutaZip' => 'instrucciones.json'
-        ];
+//        $archivos[] = [
+//            'rutaReal' => $rutaArchivoInstrucciones,
+//            'rutaZip' => 'instrucciones.json'
+//        ];
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($archivos as $archivo) {
@@ -41,7 +46,7 @@ class ArchivoController extends Controller
             $zip->close();
         }
 
-        unlink($rutaArchivoInstrucciones);
+//        unlink($rutaArchivoInstrucciones);
 
         return response()->download($zipPath)->deleteFileAfterSend();
     }
