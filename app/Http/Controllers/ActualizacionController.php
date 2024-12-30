@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
-class VersionController extends Controller
+class ActualizacionController extends Controller
 {
     /**
      * @throws Exception
@@ -16,7 +16,7 @@ class VersionController extends Controller
     public function existeActualizacionDisponible(Request $request)
     {
         $elemento = $request->input("nombre");
-        $versionActualElemento = $request->input('version');
+        $versionActualElemento = $request->input("version");
 
         $ultimaVersionElemento = $this->obtenerUltimaVersion(storage_path("app") . DIRECTORY_SEPARATOR, $elemento);
 
@@ -27,10 +27,10 @@ class VersionController extends Controller
         return response()->json(["mensaje" => "Existe una nueva version", "actualizable" => true, "version" => $ultimaVersionElemento]);
     }
 
-    private function obtenerInstrucciones(Request $request) //$currentVersion, $nextVersion, $elemento
+    public function obtenerInstrucciones(Request $request) //$currentVersion, $nextVersion, $elemento
     {
         $elemento = $request->input("nombre");
-        $versionActualElemento = $request->input('versionActual');
+        $versionActualElemento = $request->input("versionActual");
         $versionActualizable = $request->input("versionActualizable");
 
         $path = storage_path("app\\$elemento");

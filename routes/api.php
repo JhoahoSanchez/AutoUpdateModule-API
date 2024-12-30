@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\VersionController;
+use App\Http\Controllers\ActualizacionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,5 +16,5 @@ use Illuminate\Support\Facades\Route;
  */
 
 Route::middleware('api')->group(function () {
-    Route::post('buscar-actualizacion', [VersionController::class, 'existeActualizacionDisponible']);
+    Route::post('buscar-actualizacion', [ActualizacionController::class, 'existeActualizacionDisponible']);
 });
