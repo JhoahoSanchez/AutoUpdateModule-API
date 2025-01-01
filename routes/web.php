@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 
     //Instalacion
     Route::get('buscar-recurso', [InstalacionController::class, 'buscarRecurso']);
-    Route::get('obtener-instruciones-instalacion', [InstalacionController::class, 'obtenerInstruccionesInstalacion']);
     Route::get('descargar-archivos-instalacion', [ZIPArchivoController::class, 'descargarArchivosInstalacion']);
 
     //Actualizacion

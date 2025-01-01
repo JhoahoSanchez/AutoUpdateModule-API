@@ -8,8 +8,13 @@ Content-Type: application/json
     "version": "1.0.2"
 }
 
-###
+### Descarga de archivos de instalacion
 
 GET http://127.0.0.1:8000/descargar-archivos-instalacion?elemento=interfaz-hormolab&ultimaVersion=1.2.0
+
+###
+
+GET http://127.0.0.1:8000/obtener-instrucciones?elemento=interfaz-hormolab&ultimaVersion=1.2.0
+
 
 ###

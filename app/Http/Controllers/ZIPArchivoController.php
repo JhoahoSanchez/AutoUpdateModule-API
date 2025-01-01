@@ -8,7 +8,7 @@ use ZipArchive;
 
 class ZIPArchivoController extends Controller
 {
-    public function descargarArchivos(Request $request) //$instrucciones, $elemento, $ultimaVersionElemento
+    public function descargarArchivos(Request $request)
     {
         $instrucciones = $request->input('instrucciones'); //TODO: MODIFICAR POR EL BODY
         $elemento  = $request->input('elemento');
@@ -23,17 +23,9 @@ class ZIPArchivoController extends Controller
             ];
         }
 
-        //$rutaArchivoInstrucciones = storage_path('app\\temp\\instrucciones.json');
-        //file_put_contents($rutaArchivoInstrucciones, json_encode($instrucciones, JSON_PRETTY_PRINT));
-
         $zipFileName = "{$elemento}-{$ultimaVersion}.zip";
         $zip = new ZipArchive;
         $zipPath = storage_path("app\\temp\\{$zipFileName}");
-
-//        $archivos[] = [
-//            'rutaReal' => $rutaArchivoInstrucciones,
-//            'rutaZip' => 'instrucciones.json'
-//        ];
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($archivos as $archivo) {
@@ -46,8 +38,6 @@ class ZIPArchivoController extends Controller
             }
             $zip->close();
         }
-
-//        unlink($rutaArchivoInstrucciones);
 
         return response()->download($zipPath)->deleteFileAfterSend();
     }
