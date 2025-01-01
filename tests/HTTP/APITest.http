@@ -1,7 +1,3 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get
-    ?generated-in=PhpStorm
-
 ###
 
 POST http://127.0.0.1:8000/buscar-actualizacion
@@ -11,5 +7,9 @@ Content-Type: application/json
     "nombre": "interfaz-hormolab",
     "version": "1.0.2"
 }
+
+###
+
+GET http://127.0.0.1:8000/descargar-archivos-instalacion?elemento=interfaz-hormolab&ultimaVersion=1.2.0
 
 ###

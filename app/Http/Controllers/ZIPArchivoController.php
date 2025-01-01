@@ -57,17 +57,15 @@ class ZIPArchivoController extends Controller
         $elemento = $request->input('elemento');
         $ultimaVersion  = $request->input('ultimaVersion');
 
-        // Nombre del archivo ZIP temporal
         $zipFileName = "{$elemento}-{$ultimaVersion}.zip";
         $zip = new ZipArchive;
-        $zipPath = storage_path("app\\temp\\{$zipFileName}");
+        $zipPath = storage_path("app/temp/{$zipFileName}"); //para windows cambiar por \\
+        $path = storage_path("app/$elemento/{$ultimaVersion}"); //para windows cambiar por \\
 
-
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-            // Agregar los archivos al ZIP
-            $files = File::allFiles($directoryPath);
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            $files = File::allFiles($path);
             foreach ($files as $file) {
-                $relativePath = str_replace($directoryPath . '/', '', $file->getPathname());
+                $relativePath = str_replace($path . '/', '', $file->getPathname());
                 $zip->addFile($file->getPathname(), $relativePath);
             }
             $zip->close();
@@ -75,7 +73,6 @@ class ZIPArchivoController extends Controller
             return response()->json(['error' => 'No se pudo crear el archivo ZIP'], 500);
         }
 
-        // Enviar el archivo ZIP como respuesta
-        return Response::download($zipFilePath)->deleteFileAfterSend(true);
+        return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 }
