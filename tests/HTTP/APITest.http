@@ -1,20 +1,16 @@
 ###
 
-POST http://127.0.0.1:8000/buscar-actualizacion
+GET http://127.0.0.1:8000/buscar-actualizacion?nombre=interfaz-hormolab&version=1.0.2
 Content-Type: application/json
-
-{
-    "nombre": "interfaz-hormolab",
-    "version": "1.0.2"
-}
+Authorization: Bearer DSFHDSHH73hh2hH7GGhjkhgf5
 
 ### Descarga de archivos de instalacion
 
-GET http://127.0.0.1:8000/descargar-archivos-instalacion?elemento=interfaz-hormolab&ultimaVersion=1.2.0
+GET http://127.0.0.1:8000/descargar-archivos-instalacion?nombre=interfaz-hormolab&ultimaVersion=1.2.0
 
 ###
 
-GET http://127.0.0.1:8000/obtener-instrucciones?elemento=interfaz-hormolab&ultimaVersion=1.2.0
+GET http://127.0.0.1:8000/obtener-instrucciones?nombre=interfaz-hormolab&ultimaVersion=1.2.0
 
 
 ###

@@ -10,7 +10,7 @@ class ZIPArchivoController extends Controller
 {
     public function descargarArchivos(Request $request)
     {
-        $instrucciones = $request->input('instrucciones'); //TODO: MODIFICAR POR EL BODY
+        $instrucciones = $request->input('instrucciones');
         $elemento  = $request->input('elemento');
         $ultimaVersion  = $request->input('ultimaVersion');
 
@@ -44,7 +44,7 @@ class ZIPArchivoController extends Controller
 
     public function descargarArchivosInstalacion(Request $request)
     {
-        $elemento = $request->input('elemento');
+        $elemento = $request->input('nombre');
         $ultimaVersion  = $request->input('ultimaVersion');
 
         $zipFileName = "{$elemento}-{$ultimaVersion}.zip";

@@ -3,9 +3,10 @@
 use App\Http\Controllers\ActualizacionController;
 use App\Http\Controllers\InstalacionController;
 use App\Http\Controllers\ZIPArchivoController;
+use App\Http\Middleware\VerificarAcceso;
 use Illuminate\Support\Facades\Route;
 
-//Route::middleware('verificar.acceso')->group(function () {
+Route::middleware([VerificarAcceso::class])->group(function () {
 
     //Instalacion
     Route::get('buscar-recurso', [InstalacionController::class, 'buscarRecurso']);
@@ -15,4 +16,4 @@ use Illuminate\Support\Facades\Route;
     Route::get('buscar-actualizacion', [ActualizacionController::class, 'existeActualizacionDisponible']);
     Route::get('obtener-instrucciones', [ActualizacionController::class, 'obtenerInstrucciones']);
     Route::post('descargar-archivos', [ZIPArchivoController::class, 'descargarArchivos']);
-//});
+});

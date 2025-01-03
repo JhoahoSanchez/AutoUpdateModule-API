@@ -27,7 +27,7 @@ class ActualizacionController extends Controller
         return response()->json(["mensaje" => "Existe una nueva version", "actualizable" => true, "version" => $ultimaVersionElemento]);
     }
 
-    public function obtenerInstrucciones(Request $request) //$currentVersion, $nextVersion, $elemento
+    public function obtenerInstrucciones(Request $request)
     {
         $elemento = $request->input("nombre");
         $versionActualElemento = $request->input("versionActual");
