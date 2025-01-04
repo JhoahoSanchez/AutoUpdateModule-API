@@ -18,7 +18,7 @@ class ZIPArchivoController extends Controller
 
         foreach ($instrucciones as $instruccion) {
             $archivos[] = [
-                'rutaReal' => $instruccion['rutaAPI'],
+                'rutaReal' => array_key_exists('rutaAPI', $instruccion) ? $instruccion['rutaAPI'] : null,
                 'rutaZip' => $instruccion['rutaInstalacion']
             ];
         }
