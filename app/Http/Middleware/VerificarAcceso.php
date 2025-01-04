@@ -17,7 +17,9 @@ class VerificarAcceso
     {
         $token = $request->bearerToken();
 
-        if (!$token) {
+        $tokensAutorizados = ['b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c'];
+
+        if (!$token || !in_array($token, $tokensAutorizados)) {
             return response()->json(['error' => 'Token no valido'], 401);
         }
 

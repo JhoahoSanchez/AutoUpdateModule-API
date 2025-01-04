@@ -11,8 +11,8 @@ class ZIPArchivoController extends Controller
     public function descargarArchivos(Request $request)
     {
         $instrucciones = $request->input('instrucciones');
-        $elemento  = $request->input('elemento');
-        $ultimaVersion  = $request->input('ultimaVersion');
+        $elemento = $request->input('nombre');
+        $ultimaVersion = $request->input('version');
 
         $archivos = [];
 
@@ -25,7 +25,12 @@ class ZIPArchivoController extends Controller
 
         $zipFileName = "{$elemento}-{$ultimaVersion}.zip";
         $zip = new ZipArchive;
-        $zipPath = storage_path("app\\temp\\{$zipFileName}");
+        $zipPath = storage_path("app"
+            . DIRECTORY_SEPARATOR
+            . "temp"
+            . DIRECTORY_SEPARATOR
+            . $zipFileName
+        );
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($archivos as $archivo) {
@@ -45,17 +50,21 @@ class ZIPArchivoController extends Controller
     public function descargarArchivosInstalacion(Request $request)
     {
         $elemento = $request->input('nombre');
-        $ultimaVersion  = $request->input('ultimaVersion');
+        $ultimaVersion = $request->input('ultimaVersion');
 
         $zipFileName = "{$elemento}-{$ultimaVersion}.zip";
         $zip = new ZipArchive;
-        $zipPath = storage_path("app/temp/{$zipFileName}"); //para windows cambiar por \\
-        $path = storage_path("app/$elemento/{$ultimaVersion}"); //para windows cambiar por \\
+        $zipPath = storage_path("app" . DIRECTORY_SEPARATOR . "temp" . DIRECTORY_SEPARATOR . $zipFileName);
+        $path = storage_path("app" . DIRECTORY_SEPARATOR . $elemento . DIRECTORY_SEPARATOR . $ultimaVersion);
+
+        if (!is_dir($path)) {
+            return response()->json(["mensaje" => "No se ha encontrado el recurso."], 404);
+        }
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
             $files = File::allFiles($path);
             foreach ($files as $file) {
-                $relativePath = str_replace($path . '/', '', $file->getPathname());
+                $relativePath = str_replace($path . DIRECTORY_SEPARATOR, '', $file->getPathname());
                 $zip->addFile($file->getPathname(), $relativePath);
             }
             $zip->close();

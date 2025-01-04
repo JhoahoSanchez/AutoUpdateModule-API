@@ -18,6 +18,17 @@ class ActualizacionController extends Controller
         $elemento = $request->input("nombre");
         $versionActualElemento = $request->input("version");
 
+        $rutaVersionActual = storage_path("app"
+            . DIRECTORY_SEPARATOR
+            . $elemento
+            . DIRECTORY_SEPARATOR
+            . $versionActualElemento
+        );
+
+        if (!is_dir($rutaVersionActual)) {
+            return response()->json(['mensaje' => 'No existe la version especificada'], 404);
+        }
+
         $ultimaVersionElemento = $this->obtenerUltimaVersion(storage_path("app") . DIRECTORY_SEPARATOR, $elemento);
 
         if ($versionActualElemento == $ultimaVersionElemento) {
@@ -33,20 +44,30 @@ class ActualizacionController extends Controller
         $versionActualElemento = $request->input("versionActual");
         $versionActualizable = $request->input("versionActualizable");
 
-        $path = storage_path("app\\$elemento");
+        $path = storage_path("app" . DIRECTORY_SEPARATOR . $elemento);
 
-        $archivoHashesVersionActual = "{$path}\\{$versionActualElemento}\\{$versionActualElemento}.json";
-        $archivoHashesVersionNueva = "{$path}\\{$versionActualizable}\\{$versionActualizable}.json";
+        $archivoHashesVersionActual = $path
+            . DIRECTORY_SEPARATOR
+            . $versionActualElemento
+            . DIRECTORY_SEPARATOR
+            . $versionActualElemento
+            . ".json";
+        $archivoHashesVersionNueva = $path
+            . DIRECTORY_SEPARATOR
+            . $versionActualizable
+            . DIRECTORY_SEPARATOR
+            . $versionActualizable
+            . ".json";
 
         try {
             if (!file_exists($archivoHashesVersionActual)) {
-                $hashes = $this->generarArchivoHashes("{$path}\\{$versionActualElemento}");
+                $hashes = $this->generarArchivoHashes($path . DIRECTORY_SEPARATOR . $versionActualElemento);
                 file_put_contents($archivoHashesVersionActual, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionActual}");
             }
 
             if (!file_exists($archivoHashesVersionNueva)) {
-                $hashes = $this->generarArchivoHashes("{$path}\\{$versionActualizable}");
+                $hashes = $this->generarArchivoHashes($path . DIRECTORY_SEPARATOR . $versionActualizable);
                 file_put_contents($archivoHashesVersionNueva, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionNueva}");
             }
@@ -66,7 +87,7 @@ class ActualizacionController extends Controller
                 $cambios[] = [
                     "elemento" => basename($archivo),
                     "rutaInstalacion" => $archivo,
-                    "rutaAPI" => "{$path}\\{$versionActualizable}\\{$archivo}",
+                    "rutaAPI" => $path . DIRECTORY_SEPARATOR . $versionActualizable . DIRECTORY_SEPARATOR . $archivo,
                     "hash" => $hash,
                     "accion" => "AGREGAR"
                 ];
@@ -74,7 +95,7 @@ class ActualizacionController extends Controller
                 $cambios[] = [
                     "elemento" => basename($archivo),
                     "rutaInstalacion" => $archivo,
-                    "rutaAPI" => "{$path}\\{$versionActualizable}\\{$archivo}",
+                    "rutaAPI" => $path . DIRECTORY_SEPARATOR . $versionActualizable . DIRECTORY_SEPARATOR . $archivo,
                     "hash" => $hash,
                     "accion" => "MODIFICAR"
                 ];
@@ -144,5 +165,4 @@ class ActualizacionController extends Controller
 
         return $versionesValidas[0] ?? null;
     }
-
 }

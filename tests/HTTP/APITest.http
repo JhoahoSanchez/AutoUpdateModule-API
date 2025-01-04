@@ -1,16 +1,78 @@
-###
+### Instalacion
+### Buscar recurso para instalacion (Existe)
 
-GET http://127.0.0.1:8000/buscar-actualizacion?nombre=interfaz-hormolab&version=1.0.2
+GET http://127.0.0.1:8000/buscar-recurso?nombre=interfaz-hormolab
 Content-Type: application/json
-Authorization: Bearer DSFHDSHH73hh2hH7GGhjkhgf5
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
 
-### Descarga de archivos de instalacion
+### Buscar recurso para instalacion (No existe)
+
+GET http://127.0.0.1:8000/buscar-recurso?nombre=interfaz-hpas
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+### Descarga de archivos
+### Intento de descarga de una aplicacion existente
 
 GET http://127.0.0.1:8000/descargar-archivos-instalacion?nombre=interfaz-hormolab&ultimaVersion=1.2.0
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
 
-###
+### Intento de descarga de una aplicacion inexistente
 
-GET http://127.0.0.1:8000/obtener-instrucciones?nombre=interfaz-hormolab&ultimaVersion=1.2.0
+GET http://127.0.0.1:8000/descargar-archivos-instalacion?nombre=interfaz-hormola&ultimaVersion=1.2.0
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
 
+### Actualizacion
+### Consulta de nuevas versiones (Existe)
+
+GET http://127.0.0.1:8000/buscar-actualizacion?nombre=interfaz-hormolab&version=1.0.0
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+### Consulta de nuevas versiones (No existe)
+
+GET http://127.0.0.1:8000/buscar-actualizacion?nombre=interfaz-hormolab&version=1.2.0
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+### Consulta de nueva version (Error)
+
+GET http://127.0.0.1:8000/buscar-actualizacion?nombre=interfaz-hormolab&version=1.2.1
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+### Consulta de nueva version (Error)
+
+GET http://127.0.0.1:8000/buscar-actualizacion?nombre=interfaz-hormola&version=1.2.0
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+### Obtener archivo de instrucciones
+
+GET http://127.0.0.1:8000/obtener-instrucciones?nombre=interfaz-hormolab&versionActual=1.0.0&versionActualizable=1.2.0
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+### Descargar archivo para actualizacion
+
+POST http://127.0.0.1:8000/descargar-archivos
+Content-Type: application/json
+Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
+
+{
+  "nombre": "interfaz-hormolab",
+  "version": "1.2.0",
+  "instrucciones": [
+    {
+      "elemento": "file2.txt",
+      "rutaInstalacion": "bin/file2.txt",
+      "rutaAPI": "/mnt/ntfs/Windows/Universidad/Tesis/AU-API/AutoUpdateModule-API/storage/app/interfaz-hormolab/1.2.0/bin/file2.txt",
+      "hash": "03a7dd58ec1d5bdd72dfee847ff5da82b40d271352fc733557ba29837b48c147",
+      "accion": "AGREGAR"
+    }
+  ]
+}
 
 ###

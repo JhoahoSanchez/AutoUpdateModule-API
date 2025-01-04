@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::except([
-            'buscar-actualizacion'
+            'descargar-archivos'
         ]);
     }
 }

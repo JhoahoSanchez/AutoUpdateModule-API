@@ -13,7 +13,11 @@ class InstalacionController extends Controller
 
         $ultimaVersionElemento = $this->obtenerUltimaVersion(storage_path("app") . DIRECTORY_SEPARATOR, $elemento);
 
-        return response()->json(["mensaje" => "Existe una nueva version", "version" => $ultimaVersionElemento]);
+        if (!$ultimaVersionElemento) {
+            return response()->json(["mensaje" => "No se ha encontrado el recurso"], 404);
+        }
+
+        return response()->json(["mensaje" => "Se ha encontrado el recurso", "version" => $ultimaVersionElemento]);
     }
 
     /**
@@ -24,7 +28,7 @@ class InstalacionController extends Controller
         $appPath = rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombreAplicacion;
 
         if (!is_dir($appPath)) {
-            throw new Exception("La carpeta de la aplicación no existe: {$appPath}");
+            return null;
         }
 
         $subcarpetas = array_filter(glob($appPath . DIRECTORY_SEPARATOR . '*'), 'is_dir');
