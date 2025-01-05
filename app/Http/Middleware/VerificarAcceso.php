@@ -23,13 +23,6 @@ class VerificarAcceso
             return response()->json(['error' => 'Token no valido'], 401);
         }
 
-        //logica para obtener tokesn desde s3
-
-//        if (!$request->user() || !$request->user()->tienePermiso('acceso_actualizaciones')) {
-//            // Redirigir o devolver un error si no tiene permiso
-//            abort(403, 'No tienes permiso para acceder a esta ruta.');
-//        }
-
         return $next($request);
     }
 }
