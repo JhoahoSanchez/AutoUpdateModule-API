@@ -57,6 +57,11 @@ return [
             'throw' => false,
         ],
 
+        'simulador_s3' => [
+            'driver' => 'local',
+            'root' => storage_path('app'.DIRECTORY_SEPARATOR.'s3'),
+        ],
+
     ],
 
     /*

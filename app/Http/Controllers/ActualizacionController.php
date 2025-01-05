@@ -5,99 +5,92 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use Illuminate\Support\Facades\Storage;
 
 class ActualizacionController extends Controller
 {
-    /**
-     * @throws Exception
-     */
     public function existeActualizacionDisponible(Request $request)
     {
-        $elemento = $request->input("nombre");
-        $versionActualElemento = $request->input("version");
+        $elemento = $request->input('nombre');
+        $versionActualElemento = $request->input('version');
 
-        $rutaVersionActual = storage_path("app"
-            . DIRECTORY_SEPARATOR
-            . $elemento
-            . DIRECTORY_SEPARATOR
-            . $versionActualElemento
-        );
+        $rutaVersionActual = $elemento . DIRECTORY_SEPARATOR . $versionActualElemento;
 
-        if (!is_dir($rutaVersionActual)) {
+        if (!Storage::disk('simulador_s3')->exists($rutaVersionActual)) {
             return response()->json(['mensaje' => 'No existe la version especificada'], 404);
         }
 
-        $ultimaVersionElemento = $this->obtenerUltimaVersion(storage_path("app") . DIRECTORY_SEPARATOR, $elemento);
+        $ultimaVersionElemento = $this->obtenerUltimaVersion($elemento);
 
         if ($versionActualElemento == $ultimaVersionElemento) {
-            return response()->json(["mensaje" => "No existen nuevas versiones disponibles", "actualizable" => false], 204);
+            return response()->json(['mensaje' => 'No existen nuevas versiones disponibles', 'actualizable' => false], 204);
         }
 
-        return response()->json(["mensaje" => "Existe una nueva version", "actualizable" => true, "version" => $ultimaVersionElemento]);
+        return response()->json(['mensaje' => 'Existe una nueva version', 'actualizable' => true, 'version' => $ultimaVersionElemento]);
     }
 
     public function obtenerInstrucciones(Request $request)
     {
-        $elemento = $request->input("nombre");
-        $versionActualElemento = $request->input("versionActual");
-        $versionActualizable = $request->input("versionActualizable");
+        $elemento = $request->input('nombre');
+        $versionActualElemento = $request->input('versionActual');
+        $versionActualizable = $request->input('versionActualizable');
 
-        $path = storage_path("app" . DIRECTORY_SEPARATOR . $elemento);
+        if (!Storage::disk('simulador_s3')->exists("{$elemento}/{$versionActualElemento}")) {
+            return response()->json(['mensaje' => 'No existe la version especificada'], 404);
+        }
 
-        $archivoHashesVersionActual = $path
+        if (!Storage::disk('simulador_s3')->exists("{$elemento}/{$versionActualizable}")) {
+            return response()->json(['mensaje' => 'No existe la version especificada'], 404);
+        }
+
+        $archivoHashesVersionActual = $elemento
             . DIRECTORY_SEPARATOR
             . $versionActualElemento
             . DIRECTORY_SEPARATOR
             . $versionActualElemento
-            . ".json";
-        $archivoHashesVersionNueva = $path
+            . '.json';
+        $archivoHashesVersionNueva = $elemento
             . DIRECTORY_SEPARATOR
             . $versionActualizable
             . DIRECTORY_SEPARATOR
             . $versionActualizable
-            . ".json";
+            . '.json';
 
         try {
-            if (!file_exists($archivoHashesVersionActual)) {
-                $hashes = $this->generarArchivoHashes($path . DIRECTORY_SEPARATOR . $versionActualElemento);
-                file_put_contents($archivoHashesVersionActual, json_encode($hashes, JSON_PRETTY_PRINT));
+            if (!Storage::disk('simulador_s3')->exists($archivoHashesVersionActual)) {
+                $hashes = $this->generarArchivoHashes("{$elemento}/{$versionActualElemento}");
+                Storage::disk('simulador_s3')->put($archivoHashesVersionActual, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionActual}");
             }
 
-            if (!file_exists($archivoHashesVersionNueva)) {
-                $hashes = $this->generarArchivoHashes($path . DIRECTORY_SEPARATOR . $versionActualizable);
-                file_put_contents($archivoHashesVersionNueva, json_encode($hashes, JSON_PRETTY_PRINT));
+            if (!Storage::disk('simulador_s3')->exists($archivoHashesVersionNueva)) {
+                $hashes = $this->generarArchivoHashes("{$elemento}/{$versionActualizable}");
+                Storage::disk('simulador_s3')->put($archivoHashesVersionNueva, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionNueva}");
             }
 
         } catch (Exception $e) {
-            Log::debug("Error al generar archivo hash: " . $e->getMessage());
+            Log::debug('Error al generar archivo hash: ' . $e->getMessage());
             return null;
         }
 
-        $hashesVersionActual = json_decode(file_get_contents($archivoHashesVersionActual), true);
-        $hashesNuevaVersion = json_decode(file_get_contents($archivoHashesVersionNueva), true);
+        $hashesVersionActual = json_decode(Storage::disk('simulador_s3')->get($archivoHashesVersionActual), true);
+        $hashesNuevaVersion = json_decode(Storage::disk('simulador_s3')->get($archivoHashesVersionNueva), true);
 
         $cambios = [];
 
         foreach ($hashesNuevaVersion as $archivo => $hash) {
             if (!isset($hashesVersionActual[$archivo])) {
                 $cambios[] = [
-                    "elemento" => basename($archivo),
-                    "rutaInstalacion" => $archivo,
-                    "rutaAPI" => $path . DIRECTORY_SEPARATOR . $versionActualizable . DIRECTORY_SEPARATOR . $archivo,
-                    "hash" => $hash,
-                    "accion" => "AGREGAR"
+                    'elemento' => basename($archivo),
+                    'ruta' => $archivo,
+                    'accion' => 'AGREGAR'
                 ];
             } elseif ($hashesVersionActual[$archivo] !== $hash) {
                 $cambios[] = [
-                    "elemento" => basename($archivo),
-                    "rutaInstalacion" => $archivo,
-                    "rutaAPI" => $path . DIRECTORY_SEPARATOR . $versionActualizable . DIRECTORY_SEPARATOR . $archivo,
-                    "hash" => $hash,
-                    "accion" => "MODIFICAR"
+                    'elemento' => basename($archivo),
+                    'ruta' => $archivo,
+                    'accion' => 'MODIFICAR'
                 ];
             }
         }
@@ -105,10 +98,9 @@ class ActualizacionController extends Controller
         foreach ($hashesVersionActual as $archivo => $hash) {
             if (!isset($hashesNuevaVersion[$archivo])) {
                 $cambios[] = [
-                    "elemento" => basename($archivo),
-                    "rutaInstalacion" => $archivo,
-                    "hash" => $hash,
-                    "accion" => "ELIMINAR"
+                    'elemento' => basename($archivo),
+                    'ruta' => $archivo,
+                    'accion' => 'ELIMINAR'
                 ];
             }
         }
@@ -119,42 +111,36 @@ class ActualizacionController extends Controller
     /**
      * @throws Exception
      */
-    private function generarArchivoHashes($directory, $hashAlgorithm = 'sha256')
+    private function generarArchivoHashes($directorio, $hashAlgorithm = 'sha256')
     {
         $hashes = [];
 
-        if (!is_dir($directory)) {
-            throw new Exception("El directorio especificado no existe: {$directory}");
+        if (!Storage::disk('simulador_s3')->exists($directorio)) {
+            throw new Exception("El directorio especificado no existe: {$directorio}");
         }
 
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
-        foreach ($iterator as $file) {
-            if ($file->isDir()) {
-                continue;
-            }
+        $archivos = Storage::disk('simulador_s3')->allFiles($directorio);
 
-            $relativePath = str_replace($directory . DIRECTORY_SEPARATOR, '', $file->getPathname());
-            $hash = hash_file($hashAlgorithm, $file->getPathname());
-            $hashes[$relativePath] = $hash;
+        foreach ($archivos as $archivo) {
+            $rutaRelativa = str_replace("{$directorio}/", '', $archivo);
+            $contanidoArchivo = Storage::disk('simulador_s3')->get($archivo);
+            $hash = hash($hashAlgorithm, $contanidoArchivo);
+            $hashes[$rutaRelativa] = $hash;
         }
 
         return $hashes;
     }
 
-
-    /**
-     * @throws Exception
-     */
-    private function obtenerUltimaVersion($basePath, $nombreAplicacion)
+    private function obtenerUltimaVersion($nombreAplicacion)
     {
-        $appPath = rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $nombreAplicacion;
-
-        if (!is_dir($appPath)) {
-            throw new Exception("La carpeta de la aplicación no existe: {$appPath}");
+        if (!Storage::disk('simulador_s3')->exists($nombreAplicacion)) {
+            return null;
         }
 
-        $subcarpetas = array_filter(glob($appPath . DIRECTORY_SEPARATOR . '*'), 'is_dir');
+        $subcarpetas = Storage::disk('simulador_s3')->directories($nombreAplicacion);
+
         $versiones = array_map('basename', $subcarpetas);
+
         $versionesValidas = array_filter($versiones, function ($version) {
             return preg_match('/\d+(\.\d+)*$/', $version);
         });
