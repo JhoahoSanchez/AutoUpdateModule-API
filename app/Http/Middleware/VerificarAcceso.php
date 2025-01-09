@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SistemaExterno;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,9 +18,9 @@ class VerificarAcceso
     {
         $token = $request->bearerToken();
 
-        $tokensAutorizados = ['b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c'];
+        $tokenAutorizado = SistemaExterno::where("apiToken", $token)->first();
 
-        if (!$token || !in_array($token, $tokensAutorizados)) {
+        if (!$tokenAutorizado) {
             return response()->json(['error' => 'Token no valido'], 401);
         }
 

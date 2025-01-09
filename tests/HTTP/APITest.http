@@ -1,7 +1,7 @@
 ### Instalacion
 ### Buscar recurso para instalacion (Existe)
 
-GET http://127.0.0.1:8000/buscar-recurso?nombre=interfaz-hormolab
+GET http://127.0.0.1:8000/buscar-recurso?nombre=notepad-pp&incluir=procesos
 Content-Type: application/json
 Authorization: Bearer b5c60c71ad91d11573d3333de94be2af3cbdb1492908337040ceeb72722faa0c
 

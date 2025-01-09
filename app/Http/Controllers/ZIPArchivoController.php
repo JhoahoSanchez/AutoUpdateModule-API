@@ -70,7 +70,7 @@ class ZIPArchivoController extends Controller
 
             $zip->close();
         } else {
-            return response()->json(['error' => 'No se pudo crear el archivo ZIP'], 500);
+            return response()->json(['mensaje' => 'No se pudo crear el archivo ZIP'], 500);
         }
 
         return response()->download($rutaZIP)->deleteFileAfterSend();

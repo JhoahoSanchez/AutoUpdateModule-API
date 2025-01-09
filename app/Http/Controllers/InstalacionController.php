@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Elemento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -9,18 +10,36 @@ class InstalacionController extends Controller
 {
     public function buscarRecurso(Request $request)
     {
-        $elemento = $request->input("nombre");
+        $nombre = $request->input("nombre");
 
-        $ultimaVersionElemento = $this->obtenerUltimaVersion($elemento);
+        $ultimaVersionElemento = $this->obtenerUltimaVersion($nombre);
 
         if (!$ultimaVersionElemento) {
             return response()->json(["mensaje" => "No se ha encontrado el recurso"], 404);
         }
 
+        if ($request->input("incluir")) {
+            if ($request->input("incluir") == "procesos") {
+                $elemento = Elemento::where("nombre", $nombre)->first();
+
+                if (!$elemento) {
+                    return response()->json(['mensaje' => 'Elemento no encontrado'], 404);
+                }
+
+                return response()
+                    ->json([
+                        "mensaje" => "Se ha encontrado el recurso",
+                        "version" => $ultimaVersionElemento,
+                        "procesos" => $elemento->procesos
+                    ]);
+            }
+        }
+
         return response()->json(["mensaje" => "Se ha encontrado el recurso", "version" => $ultimaVersionElemento]);
     }
 
-    private function obtenerUltimaVersion($nombreAplicacion)
+    private
+    function obtenerUltimaVersion($nombreAplicacion)
     {
         if (!Storage::disk('simulador_s3')->exists($nombreAplicacion)) {
             return null;
