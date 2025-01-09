@@ -81,6 +81,9 @@ class ActualizacionController extends Controller
 
         foreach ($hashesNuevaVersion as $archivo => $hash) {
             if (!isset($hashesVersionActual[$archivo])) {
+                if (basename($archivo) === "{$versionActualizable}.json") {
+                    continue;
+                }
                 $cambios[] = [
                     'elemento' => basename($archivo),
                     'ruta' => $archivo,

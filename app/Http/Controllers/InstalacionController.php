@@ -30,7 +30,7 @@ class InstalacionController extends Controller
                     ->json([
                         "mensaje" => "Se ha encontrado el recurso",
                         "version" => $ultimaVersionElemento,
-                        "procesos" => $elemento->procesos
+                        "procesos" => json_decode($elemento->procesos)
                     ]);
             }
         }
