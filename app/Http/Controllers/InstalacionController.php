@@ -11,8 +11,9 @@ class InstalacionController extends Controller
     public function buscarRecurso(Request $request)
     {
         $nombre = $request->input("nombre");
+        $tipo = $request->input("tipo");
 
-        $ultimaVersionElemento = $this->obtenerUltimaVersion($nombre);
+        $ultimaVersionElemento = $this->obtenerUltimaVersion("{$tipo}/{$nombre}");
 
         if (!$ultimaVersionElemento) {
             return response()->json(["mensaje" => "No se ha encontrado el recurso"], 404);
@@ -38,8 +39,7 @@ class InstalacionController extends Controller
         return response()->json(["mensaje" => "Se ha encontrado el recurso", "version" => $ultimaVersionElemento]);
     }
 
-    private
-    function obtenerUltimaVersion($nombreAplicacion)
+    private function obtenerUltimaVersion($nombreAplicacion)
     {
         if (!Storage::disk('simulador_s3')->exists($nombreAplicacion)) {
             return null;

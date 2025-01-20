@@ -13,7 +13,8 @@ class ZIPArchivoController extends Controller
         $instrucciones = $request->input('instrucciones');
         $elemento = $request->input('nombre');
         $ultimaVersion = $request->input('version');
-        $rutaCarpeta = "{$elemento}/{$ultimaVersion}";
+        $tipo = $request->input('tipo');
+        $rutaCarpeta = "{$tipo}/{$elemento}/{$ultimaVersion}";
 
         if (!Storage::disk('simulador_s3')->exists($rutaCarpeta)) {
             return response()->json(["mensaje" => "No se ha encontrado el recurso."], 404);
@@ -43,12 +44,13 @@ class ZIPArchivoController extends Controller
 
     public function descargarArchivosInstalacion(Request $request)
     {
+        $tipo = $request->input('tipo');
         $elemento = $request->input('nombre');
         $ultimaVersion = $request->input('ultimaVersion');
 
         $nombreZIP = "{$elemento}-{$ultimaVersion}.zip";
         $rutaZIP = storage_path("app/temp/{$nombreZIP}");
-        $rutaCarpeta = "{$elemento}/{$ultimaVersion}";
+        $rutaCarpeta = "{$tipo}/{$elemento}/{$ultimaVersion}";
 
         if (!Storage::disk('simulador_s3')->exists($rutaCarpeta)) {
             return response()->json(["mensaje" => "No se ha encontrado el recurso."], 404);

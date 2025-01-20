@@ -13,8 +13,9 @@ class ActualizacionController extends Controller
     {
         $elemento = $request->input('nombre');
         $versionActualElemento = $request->input('version');
+        $tipo = $request->input('tipo');
 
-        $rutaVersionActual = $elemento . DIRECTORY_SEPARATOR . $versionActualElemento;
+        $rutaVersionActual = $tipo . DIRECTORY_SEPARATOR . $elemento . DIRECTORY_SEPARATOR . $versionActualElemento;
 
         if (!Storage::disk('simulador_s3')->exists($rutaVersionActual)) {
             return response()->json(['mensaje' => 'No existe la version especificada'], 404);
@@ -34,22 +35,27 @@ class ActualizacionController extends Controller
         $elemento = $request->input('nombre');
         $versionActualElemento = $request->input('versionActual');
         $versionActualizable = $request->input('versionActualizable');
+        $tipo = $request->input('tipo');
 
-        if (!Storage::disk('simulador_s3')->exists("{$elemento}/{$versionActualElemento}")) {
+        if (!Storage::disk('simulador_s3')->exists("{$tipo}/{$elemento}/{$versionActualElemento}")) {
             return response()->json(['mensaje' => 'No existe la version especificada'], 404);
         }
 
-        if (!Storage::disk('simulador_s3')->exists("{$elemento}/{$versionActualizable}")) {
+        if (!Storage::disk('simulador_s3')->exists("{$tipo}/{$elemento}/{$versionActualizable}")) {
             return response()->json(['mensaje' => 'No existe la version especificada'], 404);
         }
 
-        $archivoHashesVersionActual = $elemento
+        $archivoHashesVersionActual = $tipo
+            . DIRECTORY_SEPARATOR
+            . $elemento
             . DIRECTORY_SEPARATOR
             . $versionActualElemento
             . DIRECTORY_SEPARATOR
             . $versionActualElemento
             . '.json';
-        $archivoHashesVersionNueva = $elemento
+        $archivoHashesVersionNueva = $tipo
+            . DIRECTORY_SEPARATOR
+            . $elemento
             . DIRECTORY_SEPARATOR
             . $versionActualizable
             . DIRECTORY_SEPARATOR
@@ -58,13 +64,13 @@ class ActualizacionController extends Controller
 
         try {
             if (!Storage::disk('simulador_s3')->exists($archivoHashesVersionActual)) {
-                $hashes = $this->generarArchivoHashes("{$elemento}/{$versionActualElemento}");
+                $hashes = $this->generarArchivoHashes("{$tipo}/{$elemento}/{$versionActualElemento}");
                 Storage::disk('simulador_s3')->put($archivoHashesVersionActual, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionActual}");
             }
 
             if (!Storage::disk('simulador_s3')->exists($archivoHashesVersionNueva)) {
-                $hashes = $this->generarArchivoHashes("{$elemento}/{$versionActualizable}");
+                $hashes = $this->generarArchivoHashes("{$tipo}/{$elemento}/{$versionActualizable}");
                 Storage::disk('simulador_s3')->put($archivoHashesVersionNueva, json_encode($hashes, JSON_PRETTY_PRINT));
                 Log::debug("Hashes generados y guardados en: {$archivoHashesVersionNueva}");
             }
