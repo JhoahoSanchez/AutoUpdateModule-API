@@ -21,7 +21,7 @@ class ActualizacionController extends Controller
             return response()->json(['mensaje' => 'No existe la version especificada'], 404);
         }
 
-        $ultimaVersionElemento = $this->obtenerUltimaVersion($elemento);
+        $ultimaVersionElemento = $this->obtenerUltimaVersion("{$tipo}/{$elemento}");
 
         if ($versionActualElemento == $ultimaVersionElemento) {
             return response()->json(['mensaje' => 'No existen nuevas versiones disponibles', 'actualizable' => false]);
